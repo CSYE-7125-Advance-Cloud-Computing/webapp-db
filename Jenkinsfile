@@ -23,7 +23,7 @@ pipeline {
                     // Install semantic-releases if not already installed
                     sh 'npm install -g semantic-release'
                     // Run semantic-releases
-                    sh 'semantic-release setup'
+                    sh 'semantic-release'
                     // Execute semantic-release to determine the next version
                     def nextVersion = sh(script: 'semantic-release version', returnStdout: true).trim()
                     // Set the DOCKER_TAG environment variable to the next version

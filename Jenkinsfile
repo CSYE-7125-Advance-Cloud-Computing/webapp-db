@@ -4,7 +4,10 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'docker-hub-credentials'
         DOCKER_IMAGE_NAME = 'mahithchigurupati/webapp-db'
-        VERSION = 'latest'
+    }
+
+    tools {
+        nodejs 'nodejs'
     }
 
     stages {
@@ -14,10 +17,25 @@ pipeline {
             }
         }
 
+        stage('Semantic Release') {
+            steps {
+                script {
+                    // Install semantic-releases if not already installed
+                    sh 'npm install -g semantic-release'
+                    // Run semantic-releases
+                    sh 'semantic-release setup'
+                    // Execute semantic-release to determine the next version
+                    def nextVersion = sh(script: 'semantic-release version', returnStdout: true).trim()
+                    // Set the DOCKER_TAG environment variable to the next version
+                    env.DOCKER_TAG = nextVersion
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${DOCKER_IMAGE_NAME}:${VERSION}")
+                    docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_TAG}")
                 }
             }
         }
@@ -26,7 +44,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker-hub-credentials') {
-                        docker.image(DOCKER_IMAGE_NAME).push("${VERSION}")
+                        docker.image(DOCKER_IMAGE_NAME).push("${DOCKER_TAG}")
                     }
                     
                 }
@@ -47,3 +65,5 @@ pipeline {
         }
     }
 }
+
+

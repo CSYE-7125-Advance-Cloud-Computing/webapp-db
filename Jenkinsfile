@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'docker-hub-credentials'
         DOCKER_IMAGE_NAME = 'mahithchigurupati/webapp-db'
-        GITHUB-TOKEN = 'GITHUB-TOKEN'
+        GITHUB_TOKEN = 'GITHUB-TOKEN'
     }
 
     stages {
@@ -17,14 +17,14 @@ pipeline {
         stage('Semantic Release') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: GITHUB-TOKEN, variable: 'GH_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GH_TOKEN')]) {
                         sh "npx semantic-release"
                     }
-            
-                LATEST_TAG = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
-            }
-        }                    
-        
+                    
+                    LATEST_TAG = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
+                }
+            }                    
+        }
 
         stage('Build Docker Image') {
             steps {
@@ -37,16 +37,13 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: DOCKERHUB_CREDENTIALS) {
+                    withDockerRegistry(credentialsId: 'DOCKERHUB_CREDENTIALS') {
                         docker.image(DOCKER_IMAGE_NAME).push("${LATEST_TAG}")
                     }
-                    
                 }
-
             }
         }
-
-    }    
+    }
 
     post {
         success {
@@ -57,4 +54,3 @@ pipeline {
         }
     }
 }
-

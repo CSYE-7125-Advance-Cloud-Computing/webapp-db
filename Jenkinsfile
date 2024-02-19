@@ -4,10 +4,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'docker-hub-credentials'
         DOCKER_IMAGE_NAME = 'mahithchigurupati/webapp-db'
-    }
-
-    tools {
-        nodejs 'nodejs'
+        GITHUB-TOKEN = 'GITHUB-TOKEN'
     }
 
     stages {
@@ -20,22 +17,19 @@ pipeline {
         stage('Semantic Release') {
             steps {
                 script {
-                    // Install semantic-releases if not already installed
-                    sh 'npm install -g semantic-release'
-                    // Run semantic-releases
-                    sh 'semantic-release'
-                    // Execute semantic-release to determine the next version
-                    def nextVersion = sh(script: 'semantic-release version', returnStdout: true).trim()
-                    // Set the DOCKER_TAG environment variable to the next version
-                    env.DOCKER_TAG = nextVersion
-                }
+                    withCredentials([string(credentialsId: GITHUB-TOKEN, variable: 'GH_TOKEN')]) {
+                        sh "npx semantic-release"
+                    }
+            
+                LATEST_TAG = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
             }
-        }
+        }                    
+        
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_TAG}")
+                    docker.build("${DOCKER_IMAGE_NAME}:${LATEST_TAG}")
                 }
             }
         }
@@ -43,8 +37,8 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker-hub-credentials') {
-                        docker.image(DOCKER_IMAGE_NAME).push("${DOCKER_TAG}")
+                    withDockerRegistry(credentialsId: DOCKERHUB_CREDENTIALS) {
+                        docker.image(DOCKER_IMAGE_NAME).push("${LATEST_TAG}")
                     }
                     
                 }
@@ -52,9 +46,7 @@ pipeline {
             }
         }
 
-    }
-
-    
+    }    
 
     post {
         success {
@@ -65,5 +57,4 @@ pipeline {
         }
     }
 }
-
 

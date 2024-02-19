@@ -17,8 +17,9 @@ pipeline {
         stage('Semantic Release') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GH_TOKEN')]) {
-                        sh "npx semantic-release"
+                    withCredentials([string(credentialsId: GITHUB_TOKEN, variable: 'GH_TOKEN')]) {
+                        
+                        sh "semantic-release"
                     }
                     
                     LATEST_TAG = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
@@ -37,8 +38,8 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'DOCKERHUB_CREDENTIALS') {
-                        docker.image(DOCKER_IMAGE_NAME).push("${LATEST_TAG}")
+                    withDockerRegistry(credentialsId: DOCKERHUB_CREDENTIALS) {
+                        docker.image("${DOCKER_IMAGE_NAME}:${LATEST_TAG}").push("${LATEST_TAG}")
                     }
                 }
             }

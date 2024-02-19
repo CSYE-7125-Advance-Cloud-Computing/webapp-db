@@ -1,10 +1,14 @@
 pipeline {
     agent any
+    
+    tools{
+        nodejs 'nodejs'
+    }
 
     environment {
         DOCKERHUB_CREDENTIALS = 'docker-hub-credentials'
         DOCKER_IMAGE_NAME = 'mahithchigurupati/webapp-db'
-        GITHUB_TOKEN = 'GITHUB-TOKEN'
+        GITHUB_TOKEN = 'github-access-token'
     }
 
     stages {
@@ -18,7 +22,9 @@ pipeline {
             steps {
                 script {
                     withCredentials([string(credentialsId: GITHUB_TOKEN, variable: 'GH_TOKEN')]) {
-                        
+                        env.GIT_LOCAL_BRANCH='main'
+                        sh "npm i -g semantic-release"
+                        sh "npm install -g @semantic-release/git"
                         sh "semantic-release"
                     }
                     

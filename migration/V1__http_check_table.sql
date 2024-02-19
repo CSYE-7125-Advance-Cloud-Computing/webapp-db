@@ -1,6 +1,3 @@
--- Create app schema if it doesn't exist
-CREATE SCHEMA IF NOT EXISTS app;
-
 -- Enable uuid-ossp extension in the app schema
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA app;
 
